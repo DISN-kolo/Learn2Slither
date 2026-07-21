@@ -90,14 +90,13 @@ class Game:
             x_pick = random.randrange(1, self.dimension + 1)
             y_pick = random.randrange(1, self.dimension + 1)
             attempts = 0
-            while (self.board[x_pick + y_pick*12] != Cell.EMPTY
-                    and attempts < 100):
+            while (self.board[x_pick + y_pick*12] != Cell.EMPTY):
                 x_pick = random.randrange(1, self.dimension + 1)
                 y_pick = random.randrange(1, self.dimension + 1)
                 attempts += 1
-            if (attempts >= 100):
-                raise Exception("Too many apple placement attemps; "\
-                    "board too crowded?")
+                if (attempts >= 100):
+                    raise Exception("Too many apple placement attemps; "
+                                    "board too crowded?")
             self.board[x_pick + y_pick*12] = kind
             res.append([x_pick, y_pick])
         return np.array(res)
