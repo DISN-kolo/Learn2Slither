@@ -111,10 +111,21 @@ class Game:
     def just_print_all(self):
         for y in range(self.size):
             for x in range(self.size):
-                print(symbolize_cell(self.board[x + y*12]), end = "")
+                print(symbolize_cell(self.board[x + y*12]), end="")
+            print()
+
+    def print_a_vision(self):
+        my_head = self.snake[0]
+        for y in range(self.size):
+            for x in range(self.size):
+                if (x != my_head[0] and y != my_head[1]):
+                    print(" ", end="")
+                else:
+                    print(symbolize_cell(self.board[x + y*12], False), end="")
             print()
 
 
 if (__name__ == "__main__"):
     game = Game()
     game.just_print_all()
+    game.print_a_vision()
