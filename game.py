@@ -15,7 +15,6 @@ def are_there_walls(x, y, dim):
         res[1] = True
     elif (x == dim - 1):
         res[3] = True
-    print(res)
     return res
 
 
@@ -30,7 +29,6 @@ def generate_init_snake_coords(dim):
     x_start = random.randrange(dim)
     y_start = random.randrange(dim)
     res.append([x_start, y_start])
-    print("second chunk:")
     where_walls = are_there_walls(x_start, y_start, dim)
     second_chunk_dir = random.randrange(4)
     while (where_walls[second_chunk_dir]):
@@ -45,7 +43,6 @@ def generate_init_snake_coords(dim):
         case 3:
             res.append([res[0][0] + 1, res[0][1]])
     last_dir = random.randrange(4)
-    print("last chunk:")
     where_walls = are_there_walls(res[1][0], res[1][1], dim)
     while (are_opposing(last_dir, second_chunk_dir)
             or (where_walls[last_dir])):
@@ -59,8 +56,27 @@ def generate_init_snake_coords(dim):
             res.append([res[1][0], res[1][1] + 1])
         case 3:
             res.append([res[1][0] + 1, res[1][1]])
-    print(res)
     return res
+
+
+def symbolize_cell(cell_enum, is_general=True):
+    match cell_enum:
+        case Cell.EMPTY:
+            if (is_general):
+                return " "
+            else:
+                return "0"
+        case Cell.WALL:
+            return "W"
+        case Cell.HEAD:
+            return "H"
+        case Cell.BODY:
+            return "S"
+        case Cell.GREEN_APPLE:
+            return "G"
+        case Cell.RED_APPLE:
+            return "R"
+    return "-"
 
 
 class Game:
@@ -84,8 +100,21 @@ class Game:
                 and (i < self.size*(self.size - 1)))
             else Cell.WALL for i in range(12*12)]
         self.snake = np.array(generate_init_snake_coords(self.dimension)) + 1
-        print(self.snake)
+        ctr = 0
+        for xy_pair in self.snake:
+            if (ctr == 0):
+                self.board[xy_pair[0] + xy_pair[1]*12] = Cell.HEAD
+            else:
+                self.board[xy_pair[0] + xy_pair[1]*12] = Cell.BODY
+            ctr += 1
+
+    def just_print_all(self):
+        for y in range(self.size):
+            for x in range(self.size):
+                print(symbolize_cell(self.board[x + y*12]), end = "")
+            print()
 
 
 if (__name__ == "__main__"):
     game = Game()
+    game.just_print_all()
