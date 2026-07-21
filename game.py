@@ -84,6 +84,24 @@ class Game:
     dimension = 10
     size = dimension + 2
 
+    def gen_apples(self, count, kind):
+        res = []
+        for i in range(count):
+            x_pick = random.randrange(1, self.dimension + 1)
+            y_pick = random.randrange(1, self.dimension + 1)
+            attempts = 0
+            while (self.board[x_pick + y_pick*12] != Cell.EMPTY
+                    and attempts < 100):
+                x_pick = random.randrange(1, self.dimension + 1)
+                y_pick = random.randrange(1, self.dimension + 1)
+                attempts += 1
+            if (attempts >= 100):
+                raise Exception("Too many apple placement attemps; "\
+                    "board too crowded?")
+            self.board[x_pick + y_pick*12] = kind
+            res.append([x_pick, y_pick])
+        return np.array(res)
+
     def __init__(self):
         #   x - >
         # y  0  1  2  3  4  5  6  7  8  9 10 11
@@ -92,6 +110,9 @@ class Game:
         #
         # so, to get x: % 12
         # to get y: / 12
+        #
+        # from xy to i then:
+        # i = x + y*12
         self.board = [
             Cell.EMPTY if (
                 (i % self.size != 0)
@@ -107,6 +128,8 @@ class Game:
             else:
                 self.board[xy_pair[0] + xy_pair[1]*12] = Cell.BODY
             ctr += 1
+        self.red_apples = self.gen_apples(1, Cell.RED_APPLE)
+        self.green_apples = self.gen_apples(2, Cell.GREEN_APPLE)
 
     def just_print_all(self):
         for y in range(self.size):
