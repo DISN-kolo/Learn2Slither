@@ -112,6 +112,7 @@ class Game:
         #
         # from xy to i then:
         # i = x + y*self.size
+        self.result = Movres.UNKNOWN
         self.board = [
             Cell.EMPTY if (
                 (i % self.size != 0)
@@ -165,7 +166,10 @@ class Game:
             case Cell.GREEN_APPLE:
                 self.process_move(next_tile_coords, 0)
                 self.gen_apples(1, Cell.GREEN_APPLE)
-                self.result = Movres.GOOD_APPLE
+                if (len(self.snake) == 10):
+                    self.result = Movres.WON
+                else:
+                    self.result = Movres.GOOD_APPLE
             case Cell.RED_APPLE:
                 if (len(self.snake) > 1):
                     self.process_move(next_tile_coords, 2)
@@ -186,6 +190,7 @@ class Game:
                 self.move_checker(1, 1)
             case Movdir.RIGHT:
                 self.move_checker(0, 1)
+        return self.result
 
     def just_print_all(self):
         for y in range(self.size):

@@ -6,3 +6,4 @@ class Movres(Enum):
     BAD_APPLE = 1
     GOOD_APPLE = 2
     DEAD = 3
+    WON = 4

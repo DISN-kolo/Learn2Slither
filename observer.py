@@ -1,4 +1,5 @@
 from utils.cell_types import Cell
+from utils.mov_res import Movres
 
 
 class Observer:
@@ -60,3 +61,16 @@ class Observer:
             arr.append(observed_cell, distance)
         res = tuple(arr)
         return res
+
+    def choose_reward(self, act_result):
+        match act_result:
+            case Movres.NORMAL:
+                return -0.1
+            case Movres.DEAD:
+                return -10
+            case Movres.GOOD_APPLE:
+                return 3
+            case Movres.BAD_APPLE:
+                return -3
+            case Movres.WON:
+                return 10

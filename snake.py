@@ -5,6 +5,7 @@ from game import Game
 from observer import Observer
 from qtable import Qtable
 from agent import Agent
+from utils.mov_res import Movres
 
 
 if (__name__ == "__main__"):
@@ -12,10 +13,11 @@ if (__name__ == "__main__"):
     iterations = 1000
     i = 0
     training_mode = True
+    naivete = False
     game = Game()
     observer = Observer()
     agent = Agent()
-    state = observer.observe(game)
+    state = observer.observe(game, naivete)
     qtable = Qtable()
     qslice = qtable.get_slice(state)
     old_qslice = qslice
@@ -30,8 +32,9 @@ if (__name__ == "__main__"):
         action = agent.suggest_action(eps, state, qtable)
         #  I'm sorry, it just makes no sense to drag it out to be separately
         # processed by the observer.
-        reward = game.run_action(action)
-        state = observer.observe(game)
+        act_result = game.run_action(action)
+        reward = observer.choose_reward(act_result)
+        state = observer.observe(game, naivete)
         if (training_mode):
             qslice = qtable.get_slice(state)
             old_qslice[action] = (
@@ -39,5 +42,7 @@ if (__name__ == "__main__"):
                 + alpha*(reward + gamma * np.max(qslice))
             )
             old_qslice = qslice
+        if (act_result == Movres.WON or act_result == Movres.DEAD):
+            break
         i += 1
         eps *= math.pow(1 - eps_reductor, i)
