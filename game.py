@@ -88,7 +88,6 @@ class Game:
     size = dimension + 2
 
     def gen_apples(self, count, kind):
-        res = []
         for i in range(count):
             x_pick = random.randrange(1, self.dimension + 1)
             y_pick = random.randrange(1, self.dimension + 1)
@@ -97,12 +96,10 @@ class Game:
                 x_pick = random.randrange(1, self.dimension + 1)
                 y_pick = random.randrange(1, self.dimension + 1)
                 attempts += 1
-                if (attempts >= 100):
+                if (attempts >= 2000):
                     raise Exception("Too many apple placement attemps; "
                                     "board too crowded?")
             self.board[x_pick + y_pick*self.size] = kind
-            res.append([x_pick, y_pick])
-        return np.array(res)
 
     def __init__(self):
         #   x - >
@@ -133,13 +130,17 @@ class Game:
             else:
                 self.board[xy_pair[0] + xy_pair[1]*self.size] = Cell.BODY
             ctr += 1
-        self.red_apples = self.gen_apples(1, Cell.RED_APPLE)
-        self.green_apples = self.gen_apples(2, Cell.GREEN_APPLE)
+        self.gen_apples(1, Cell.RED_APPLE)
+        self.gen_apples(2, Cell.GREEN_APPLE)
 
     def process_move(self, to_where, erase_in_back):
+        my_head = self.snake[0]
+        self.board[my_head[0] + my_head[1]*self.size] = Cell.BODY
         self.snake.appendleft(to_where)
+        self.board[to_where[0] + to_where[1]*self.size] = Cell.HEAD
         for i in range(erase_in_back):
-            self.snake.pop()
+            popped = self.snake.pop()
+            self.board[popped[0] + popped[1]*self.size] = Cell.EMPTY
 
     def move_checker(self, axis, sign):
         my_head = self.snake[0]
@@ -163,13 +164,16 @@ class Game:
                 self.result = Movres.DEAD
             case Cell.GREEN_APPLE:
                 self.process_move(next_tile_coords, 0)
+                self.gen_apples(1, Cell.GREEN_APPLE)
                 self.result = Movres.GOOD_APPLE
             case Cell.RED_APPLE:
                 if (len(self.snake) > 1):
                     self.process_move(next_tile_coords, 2)
+                    self.gen_apples(1, Cell.RED_APPLE)
                     self.result = Movres.BAD_APPLE
                 else:
                     self.process_move(next_tile_coords, 1)
+                    self.gen_apples(1, Cell.RED_APPLE)
                     self.result = Movres.DEAD
 
     def run_action(self, action):
