@@ -1,7 +1,10 @@
 #!venv/bin/python
 from utils.cell_types import Cell
+from utils.mov_dirs import Movdir
+from utils.mov_res import Movres
 import random
 import numpy as np
+from collections import deque
 
 
 # directions are up, left, down, right. equal to 0, 1, 2, 3.
@@ -119,7 +122,10 @@ class Game:
                 and (i > self.size)
                 and (i < self.size*(self.size - 1)))
             else Cell.WALL for i in range(self.size*self.size)]
+        # use numpy just for that sweet +1
         self.snake = np.array(generate_init_snake_coords(self.dimension)) + 1
+        # use a deque cuz it flows better with pop/push
+        self.snake = deque(list(part) for part in self.snake)
         ctr = 0
         for xy_pair in self.snake:
             if (ctr == 0):
@@ -129,6 +135,53 @@ class Game:
             ctr += 1
         self.red_apples = self.gen_apples(1, Cell.RED_APPLE)
         self.green_apples = self.gen_apples(2, Cell.GREEN_APPLE)
+
+    def process_move(self, to_where, erase_in_back):
+        self.snake.appendleft(to_where)
+        for i in range(erase_in_back):
+            self.snake.pop()
+
+    def move_checker(self, axis, sign):
+        my_head = self.snake[0]
+        next_tile_coords = my_head.copy()
+        next_tile_coords[axis] += sign
+        next_tile = self.board[
+            next_tile_coords[0] + next_tile_coords[1]*self.size
+        ]
+        match next_tile:
+            case Cell.EMPTY:
+                self.process_move(next_tile_coords, 1)
+                self.result = Movres.NORMAL
+            case Cell.WALL:
+                self.process_move(next_tile_coords, 1)
+                self.result = Movres.DEAD
+            case Cell.HEAD:
+                self.result = Movres.UNKNOWN
+                raise Exception("Met your own head. Something is not working")
+            case Cell.BODY:
+                self.process_move(next_tile_coords, 1)
+                self.result = Movres.DEAD
+            case Cell.GREEN_APPLE:
+                self.process_move(next_tile_coords, 0)
+                self.result = Movres.GOOD_APPLE
+            case Cell.RED_APPLE:
+                if (len(self.snake) > 1):
+                    self.process_move(next_tile_coords, 2)
+                    self.result = Movres.BAD_APPLE
+                else:
+                    self.process_move(next_tile_coords, 1)
+                    self.result = Movres.DEAD
+
+    def run_action(self, action):
+        match action:
+            case Movdir.UP:
+                self.move_checker(1, -1)
+            case Movdir.LEFT:
+                self.move_checker(0, -1)
+            case Movdir.DOWN:
+                self.move_checker(1, 1)
+            case Movdir.RIGHT:
+                self.move_checker(0, 1)
 
     def just_print_all(self):
         for y in range(self.size):
