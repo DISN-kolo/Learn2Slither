@@ -27,6 +27,6 @@ class Agent:
             return mov_dir
         else:
             # pick a random direction.
-            # left, forward, right = 0, 1, 2
-            mov_dir = Movdir(random.randrange(3))
+            # up, left, down, right = 0, 1, 2, 3
+            mov_dir = Movdir(random.randrange(4))
         return mov_dir

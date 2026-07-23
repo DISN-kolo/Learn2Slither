@@ -1,6 +1,7 @@
 from enum import Enum
 
 class Movdir(Enum):
-    LEFT = 0
-    FORWARD = 1
-    RIGHT = 2
+    UP = 0
+    LEFT = 1
+    DOWN = 2
+    RIGHT = 3
