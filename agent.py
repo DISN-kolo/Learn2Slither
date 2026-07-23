@@ -14,7 +14,8 @@ class Agent:
     # choose mov dir based on state and current Q table, send it to
     #the game field. epsilon determines whether to act randomly
     #or based upon the Q table.
-    def suggest_action(self, eps, qslice):
+    def suggest_action(self, eps, state, qtable):
+        qslice = qtable.get_slice(state)
         local_rand_value = random.random()
         mov_dir = -1
         if (local_rand_value > eps):

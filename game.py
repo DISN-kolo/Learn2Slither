@@ -90,14 +90,14 @@ class Game:
             x_pick = random.randrange(1, self.dimension + 1)
             y_pick = random.randrange(1, self.dimension + 1)
             attempts = 0
-            while (self.board[x_pick + y_pick*12] != Cell.EMPTY):
+            while (self.board[x_pick + y_pick*self.size] != Cell.EMPTY):
                 x_pick = random.randrange(1, self.dimension + 1)
                 y_pick = random.randrange(1, self.dimension + 1)
                 attempts += 1
                 if (attempts >= 100):
                     raise Exception("Too many apple placement attemps; "
                                     "board too crowded?")
-            self.board[x_pick + y_pick*12] = kind
+            self.board[x_pick + y_pick*self.size] = kind
             res.append([x_pick, y_pick])
         return np.array(res)
 
@@ -107,25 +107,25 @@ class Game:
         # | 12 13 14 15 16 17 18 19 20 21 22 23
         # v
         #
-        # so, to get x: % 12
-        # to get y: / 12
+        # so, to get x: % self.size
+        # to get y: / self.size
         #
         # from xy to i then:
-        # i = x + y*12
+        # i = x + y*self.size
         self.board = [
             Cell.EMPTY if (
                 (i % self.size != 0)
                 and (i % self.size != self.size - 1)
                 and (i > self.size)
                 and (i < self.size*(self.size - 1)))
-            else Cell.WALL for i in range(12*12)]
+            else Cell.WALL for i in range(self.size*self.size)]
         self.snake = np.array(generate_init_snake_coords(self.dimension)) + 1
         ctr = 0
         for xy_pair in self.snake:
             if (ctr == 0):
-                self.board[xy_pair[0] + xy_pair[1]*12] = Cell.HEAD
+                self.board[xy_pair[0] + xy_pair[1]*self.size] = Cell.HEAD
             else:
-                self.board[xy_pair[0] + xy_pair[1]*12] = Cell.BODY
+                self.board[xy_pair[0] + xy_pair[1]*self.size] = Cell.BODY
             ctr += 1
         self.red_apples = self.gen_apples(1, Cell.RED_APPLE)
         self.green_apples = self.gen_apples(2, Cell.GREEN_APPLE)
@@ -133,7 +133,7 @@ class Game:
     def just_print_all(self):
         for y in range(self.size):
             for x in range(self.size):
-                print(symbolize_cell(self.board[x + y*12]), end="")
+                print(symbolize_cell(self.board[x + y*self.size]), end="")
             print()
 
     def print_a_vision(self):
@@ -143,7 +143,12 @@ class Game:
                 if (x != my_head[0] and y != my_head[1]):
                     print(" ", end="")
                 else:
-                    print(symbolize_cell(self.board[x + y*12], False), end="")
+                    print(
+                        symbolize_cell(
+                            self.board[x + y*self.size], False
+                        ),
+                        end=""
+                    )
             print()
 
 

@@ -1,6 +1,5 @@
 #!venv/bin/python
 import math
-import pandas as pd
 
 
 if (__name__ == "__main__"):
