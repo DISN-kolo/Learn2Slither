@@ -2,12 +2,12 @@ from utils.cell_types import Cell
 
 
 class Observer:
-    # naïveté being false means doing the smart approach of observing
-    #the distances to the nearest non-empty cells. the return format in
-    #that case is a tuple of (Cell.TYPE, distance, ...) in the usual
-    #up, left, down, right format.
-    # if the naïveté parameter is true, however, just fill up the return
-    #tuple with the vertical slice followed by the horizontal slice.
+    #  naïveté being false means doing the smart approach of observing
+    # the distances to the nearest non-empty cells. the return format in
+    # that case is a tuple of (Cell.TYPE, distance, ...) in the usual
+    # up, left, down, right format.
+    #  if the naïveté parameter is true, however, just fill up the return
+    # tuple with the vertical slice followed by the horizontal slice.
     def observe(self, game, naivete):
         head_of_snake = game.snake[0]
         arr = []

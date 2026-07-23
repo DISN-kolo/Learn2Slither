@@ -11,20 +11,22 @@ class Agent:
     Must never use game field info for actions.
     """
 
-    # choose mov dir based on state and current Q table, send it to
-    #the game field. epsilon determines whether to act randomly
-    #or based upon the Q table.
+    #  choose mov dir based on state and current Q table, send it to
+    # the game field. epsilon determines whether to act randomly
+    # or based upon the Q table.
     def suggest_action(self, eps, state, qtable):
         qslice = qtable.get_slice(state)
+        print(qslice)
         local_rand_value = random.random()
         mov_dir = -1
         if (local_rand_value > eps):
-            # pick a direction according to the qslice.
-            # since some directions may be equally max-valued,
-            #pick at random between all max-valued directions.
+            #  pick a direction according to the qslice.
+            #  since some directions may be equally max-valued,
+            # pick at random between all max-valued directions.
+            # TODO
+            return mov_dir
         else:
             # pick a random direction.
             # left, forward, right = 0, 1, 2
             mov_dir = Movdir(random.randrange(3))
         return mov_dir
-        

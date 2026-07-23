@@ -1,5 +1,10 @@
 #!venv/bin/python
 import math
+import numpy as np
+from game import Game
+from observer import Observer
+from qtable import Qtable
+from agent import Agent
 
 
 if (__name__ == "__main__"):
@@ -9,6 +14,7 @@ if (__name__ == "__main__"):
     training_mode = True
     game = Game()
     observer = Observer()
+    agent = Agent()
     state = observer.observe(game)
     qtable = Qtable()
     qslice = qtable.get_slice(state)
@@ -22,8 +28,8 @@ if (__name__ == "__main__"):
     gamma = 0.9
     while (i < iterations):
         action = agent.suggest_action(eps, state, qtable)
-        # I'm sorry, it just makes no sense to drag it out to be separately
-        #processed by the observer.
+        #  I'm sorry, it just makes no sense to drag it out to be separately
+        # processed by the observer.
         reward = game.run_action(action)
         state = observer.observe(game)
         if (training_mode):
