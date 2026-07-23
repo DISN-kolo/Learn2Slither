@@ -28,7 +28,6 @@ class Agent:
             best_indices = np.flatnonzero(qslice == max_value)
             chosen_index = random.choice(best_indices)
             mov_dir = Movdir(chosen_index)
-            return mov_dir
         else:
             # pick a random direction.
             # up, left, down, right = 0, 1, 2, 3
