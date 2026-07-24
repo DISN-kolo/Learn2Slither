@@ -2,10 +2,12 @@
 import math
 import numpy as np
 from game import Game
+from gui import Gui
 from observer import Observer
 from qtable import Qtable
 from agent import Agent
 from utils.mov_res import Movres
+from utils.mov_dirs import Movdir
 
 
 if (__name__ == "__main__"):
@@ -15,6 +17,7 @@ if (__name__ == "__main__"):
     training_mode = True
     naivete = False
     game = Game()
+    gui = Gui(game)
     observer = Observer()
     agent = Agent()
     state = observer.observe(game, naivete)
@@ -28,21 +31,25 @@ if (__name__ == "__main__"):
     alpha = 0.9
     # discount factor
     gamma = 0.9
-    while (i < iterations):
-        action = agent.suggest_action(eps, state, qtable)
-        #  I'm sorry, it just makes no sense to drag it out to be separately
-        # processed by the observer.
-        act_result = game.run_action(action)
-        reward = observer.choose_reward(act_result)
-        state = observer.observe(game, naivete)
-        if (training_mode):
-            qslice = qtable.get_slice(state)
-            old_qslice[action] = (
-                (1 - alpha)*old_qslice[action]
-                + alpha*(reward + gamma * np.max(qslice))
-            )
-            old_qslice = qslice
-        if (act_result == Movres.WON or act_result == Movres.DEAD):
-            break
-        i += 1
-        eps *= math.pow(1 - eps_reductor, i)
+    try:
+        while (i < iterations):
+            if (not gui.tick(game)):
+                break
+            action = agent.suggest_action(eps, state, qtable)
+            act_result = game.run_action(action)
+            reward = observer.choose_reward(act_result)
+            state = observer.observe(game, naivete)
+            if (training_mode):
+                qslice = qtable.get_slice(state)
+                old_qslice[action.value] = (
+                    (1 - alpha)*old_qslice[action.value]
+                    + alpha*(reward + gamma * np.max(qslice))
+                )
+                old_qslice = qslice
+            if (act_result == Movres.WON or act_result == Movres.DEAD):
+                gui.tick(game)
+                break
+            i += 1
+            eps *= math.pow(1 - eps_reductor, i)
+    finally:
+        gui.close()

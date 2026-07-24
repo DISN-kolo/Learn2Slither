@@ -28,7 +28,8 @@ class Observer:
                     head_of_snake[0]
                     + (head_of_snake[1] - distance)*game.size
                 ]
-            arr.append(observed_cell, distance)
+            arr.append(observed_cell)
+            arr.append(distance)
             # left
             observed_cell = Cell.EMPTY
             distance = 0
@@ -38,7 +39,8 @@ class Observer:
                     head_of_snake[0] - distance
                     + head_of_snake[1]*game.size
                 ]
-            arr.append(observed_cell, distance)
+            arr.append(observed_cell)
+            arr.append(distance)
             # down
             observed_cell = Cell.EMPTY
             distance = 0
@@ -48,7 +50,8 @@ class Observer:
                     head_of_snake[0]
                     + (head_of_snake[1] + distance)*game.size
                 ]
-            arr.append(observed_cell, distance)
+            arr.append(observed_cell)
+            arr.append(distance)
             # right
             observed_cell = Cell.EMPTY
             distance = 0
@@ -58,7 +61,8 @@ class Observer:
                     head_of_snake[0] + distance
                     + head_of_snake[1]*game.size
                 ]
-            arr.append(observed_cell, distance)
+            arr.append(observed_cell)
+            arr.append(distance)
         res = tuple(arr)
         return res
 

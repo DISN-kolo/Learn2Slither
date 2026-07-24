@@ -19,7 +19,7 @@ class Agent:
         qslice = qtable.get_slice(state)
         print(qslice)
         local_rand_value = random.random()
-        mov_dir = -1
+        mov_dir = 0
         if (local_rand_value > eps):
             #  pick a direction according to the qslice.
             #  since some directions may be equally max-valued,
