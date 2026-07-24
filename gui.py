@@ -17,10 +17,7 @@ CELL_COLORS = {
 
 class Gui:
     """
-    minimal tkinter board viewer for a running game. owns all pacing
-    logic (speed slider, pause/play, single-step) so the caller's while
-    loop only has to call tick(game) once per iteration and check its
-    return value to know when to stop.
+    minimal tkinter board viewer for a running game. controls fps as well
     """
 
     def __init__(self, game):
@@ -29,9 +26,9 @@ class Gui:
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self.closed = False
-        self.paused = True
+        self.paused = False
         self.step_requested = False
-        self.delay_ms = tk.IntVar(value=150)
+        self.delay_ms = tk.IntVar(value=1)
 
         board_px = game.size * CELL_SIZE
         self.canvas = tk.Canvas(
@@ -103,9 +100,9 @@ class Gui:
 
     def tick(self, game):
         """
-        redraw the board, then block the caller for as long as the
-        current controls dictate: instantly if playing, until a step
-        or unpause if paused. returns False once the window has been
+        redraw the board, block the caller.
+        unblock if auto-playing, or unblock on pressing 'step'
+        returns False once the window has been
         closed, so the caller knows to stop its loop.
         """
         self.render(game)
@@ -130,6 +127,35 @@ class Gui:
                 elapsed += 0.01
                 self._pump()
         return not self.closed
+
+    def show_result(self, game, won, frames=3):
+        """
+        overlay a WIN/LOSS banner on the board and hold it for the given
+        number of paced frames, then clear it. returns False once the window
+        has been closed
+        """
+        label = "WIN" if (won) else "LOSS"
+        color = "#00b300" if (won) else "#e60000"
+        cx = game.size * CELL_SIZE / 2
+        cy = game.size * CELL_SIZE / 2
+        text_id = self.canvas.create_text(
+            cx, cy, text=label, font=("Helvetica", 28, "bold"), fill=color
+        )
+        pad = 12
+        x0, y0, x1, y1 = self.canvas.bbox(text_id)
+        box_id = self.canvas.create_rectangle(
+            x0 - pad, y0 - pad, x1 + pad, y1 + pad,
+            fill="#ffffff", outline="black"
+        )
+        self.canvas.tag_lower(box_id, text_id)
+        still_open = True
+        for _ in range(frames):
+            still_open = self.tick(game)
+            if (not still_open):
+                break
+        self.canvas.delete(box_id)
+        self.canvas.delete(text_id)
+        return still_open
 
     def close(self):
         if (not self.closed):

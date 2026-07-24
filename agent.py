@@ -17,7 +17,6 @@ class Agent:
     # or based upon the Q table.
     def suggest_action(self, eps, state, qtable):
         qslice = qtable.get_slice(state)
-        print(qslice)
         local_rand_value = random.random()
         mov_dir = 0
         if (local_rand_value > eps):

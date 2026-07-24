@@ -219,3 +219,5 @@ __marimo__/
 
 # vim tmp files
 *.swp
+
+.qtable*

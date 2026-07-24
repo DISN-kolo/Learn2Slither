@@ -48,12 +48,12 @@ class Observer:
     def choose_reward(self, act_result):
         match act_result:
             case Movres.NORMAL:
-                return -0.1
+                return -1
             case Movres.DEAD:
-                return -10
+                return -20
             case Movres.GOOD_APPLE:
-                return 3
-            case Movres.BAD_APPLE:
-                return -3
-            case Movres.WON:
                 return 10
+            case Movres.BAD_APPLE:
+                return -5
+            case Movres.WON:
+                return 15
