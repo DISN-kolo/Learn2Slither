@@ -18,51 +18,30 @@ class Observer:
             for x in range(game.size):
                 arr.append(game.board[x + head_of_snake[1]*game.size])
         else:
-            # XXX boilerplate removal?
-            # up
-            observed_cell = Cell.EMPTY
-            distance = 0
-            while (observed_cell == Cell.EMPTY):
-                distance += 1
-                observed_cell = game.board[
-                    head_of_snake[0]
-                    + (head_of_snake[1] - distance)*game.size
-                ]
-            arr.append(observed_cell)
-            arr.append(distance)
-            # left
-            observed_cell = Cell.EMPTY
-            distance = 0
-            while (observed_cell == Cell.EMPTY):
-                distance += 1
-                observed_cell = game.board[
-                    head_of_snake[0] - distance
-                    + head_of_snake[1]*game.size
-                ]
-            arr.append(observed_cell)
-            arr.append(distance)
-            # down
-            observed_cell = Cell.EMPTY
-            distance = 0
-            while (observed_cell == Cell.EMPTY):
-                distance += 1
-                observed_cell = game.board[
-                    head_of_snake[0]
-                    + (head_of_snake[1] + distance)*game.size
-                ]
-            arr.append(observed_cell)
-            arr.append(distance)
-            # right
-            observed_cell = Cell.EMPTY
-            distance = 0
-            while (observed_cell == Cell.EMPTY):
-                distance += 1
-                observed_cell = game.board[
-                    head_of_snake[0] + distance
-                    + head_of_snake[1]*game.size
-                ]
-            arr.append(observed_cell)
-            arr.append(distance)
+            # up, left, down, right = [0], [1], [2], [3]
+            directions = [(0, -1), (-1, 0), (0, 1), (1, 0)]
+            head_x, head_y = head_of_snake[0], head_of_snake[1]
+            for dx, dy in directions:
+                if (head_x == 0 or head_x == game.size - 1
+                        or head_y == 0 or head_y == game.size - 1):
+                    arr.append(Cell.WALL)
+                    arr.append(0)
+                    continue
+                observed_cell = Cell.EMPTY
+                distance = 0
+                while (observed_cell == Cell.EMPTY):
+                    distance += 1
+                    x = head_x + dx*distance
+                    y = head_y + dy*distance
+                    if (x < 0
+                            or x >= game.size
+                            or y < 0
+                            or y >= game.size):
+                        observed_cell = Cell.WALL
+                        break
+                    observed_cell = game.board[x + y*game.size]
+                arr.append(observed_cell)
+                arr.append(distance)
         res = tuple(arr)
         return res
 

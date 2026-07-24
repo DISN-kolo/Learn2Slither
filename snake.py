@@ -7,7 +7,6 @@ from observer import Observer
 from qtable import Qtable
 from agent import Agent
 from utils.mov_res import Movres
-from utils.mov_dirs import Movdir
 
 
 if (__name__ == "__main__"):
