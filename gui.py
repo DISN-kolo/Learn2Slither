@@ -20,7 +20,7 @@ class Gui:
     minimal tkinter board viewer for a running game. controls fps as well
     """
 
-    def __init__(self, game):
+    def __init__(self, size, warmup_sessions=0):
         self.root = tk.Tk()
         self.root.title("Snake Game")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -29,27 +29,32 @@ class Gui:
         self.paused = False
         self.step_requested = False
         self.delay_ms = tk.IntVar(value=1)
+        self.warmup_sessions = warmup_sessions
+        self.session = 0
+        self.warmup_text_id = None
 
-        board_px = game.size * CELL_SIZE
+        self.board_px = size * CELL_SIZE
         self.canvas = tk.Canvas(
-            self.root, width=board_px, height=board_px, bg="#f0f0f0"
+            self.root, width=self.board_px, height=self.board_px,
+            bg="#f0f0f0"
         )
         self.canvas.pack()
         self.cell_ids = [
-            [None for _ in range(game.size)] for _ in range(game.size)
+            [None for _ in range(size)] for _ in range(size)
         ]
-        self._build_grid(game)
+        self._build_grid(size)
         self._build_controls()
+        if (self.warmup_sessions > 0):
+            self._set_warmup_text()
         self._pump()
 
-    def _build_grid(self, game):
-        for y in range(game.size):
-            for x in range(game.size):
-                cell = game.board[x + y * game.size]
+    def _build_grid(self, size):
+        for y in range(size):
+            for x in range(size):
                 cell_id = self.canvas.create_rectangle(
                     x * CELL_SIZE, y * CELL_SIZE,
                     (x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE,
-                    fill=CELL_COLORS[cell], outline="black"
+                    fill=CELL_COLORS[Cell.EMPTY], outline="black"
                 )
                 self.cell_ids[y][x] = cell_id
 
@@ -76,6 +81,25 @@ class Gui:
             side="left", fill="x", expand=True, padx=4, pady=4
         )
 
+    def _set_warmup_text(self):
+        cx = self.board_px / 2
+        cy = self.board_px / 2
+        self.warmup_text_id = self.canvas.create_text(
+            cx, cy, text="training...", font=("Helvetica", 18, "bold"),
+            fill="black"
+        )
+
+    def begin_session(self, j):
+        """
+        starts real rendering upon getting over the warmup sessions ctr
+        """
+        self.session = j
+        if (self.session >= self.warmup_sessions
+                and self.warmup_text_id is not None):
+            self.canvas.delete(self.warmup_text_id)
+            self.warmup_text_id = None
+            self._pump()
+
     def _on_close(self):
         self.closed = True
 
@@ -101,10 +125,12 @@ class Gui:
     def tick(self, game):
         """
         redraw the board, block the caller.
-        unblock if auto-playing, or unblock on pressing 'step'
+        unblock if auto-playing, or unblock on pressing 'step'.
         returns False once the window has been
         closed, so the caller knows to stop its loop.
         """
+        if (self.session < self.warmup_sessions):
+            return not self.closed
         self.render(game)
         self._pump()
         if (self.closed):
@@ -134,10 +160,12 @@ class Gui:
         number of paced frames, then clear it. returns False once the window
         has been closed
         """
+        if (self.session < self.warmup_sessions):
+            return not self.closed
         label = "WIN" if (won) else "LOSS"
         color = "#00b300" if (won) else "#e60000"
-        cx = game.size * CELL_SIZE / 2
-        cy = game.size * CELL_SIZE / 2
+        cx = self.board_px / 2
+        cy = self.board_px / 2
         text_id = self.canvas.create_text(
             cx, cy, text=label, font=("Helvetica", 28, "bold"), fill=color
         )

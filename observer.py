@@ -50,7 +50,7 @@ class Observer:
             case Movres.NORMAL:
                 return -1
             case Movres.DEAD:
-                return -20
+                return -75
             case Movres.GOOD_APPLE:
                 return 10
             case Movres.BAD_APPLE:
