@@ -23,6 +23,7 @@ def run_session(
         show_vision,
         show_state,
         show_action,
+        show_session_log,
         meta_iterations):
     game = Game()
     observer = Observer()
@@ -66,13 +67,14 @@ def run_session(
             )
             old_qslice = qslice
         if (act_result == Movres.WON or act_result == Movres.DEAD):
-            print("gg")
             gui.show_result(game, act_result == Movres.WON)
             break
         i += 1
         eps *= math.pow(1 - eps_reductor, (i + session_progress/10))
-    print(f"session {j:10d} done after {i:7d} steps "
-          f"with len {len(game.snake):10d}")
+    if (show_session_log):
+        print(f"session {j:10d} done after {i:7d} steps "
+              f"with len {len(game.snake):10d}")
+    return len(game.snake), i
 
 
 def run_training(
@@ -85,6 +87,7 @@ def run_training(
         show_vision,
         show_state,
         show_action,
+        show_session_log,
         no_gui,
         auto_pause):
     if (no_gui):
@@ -98,18 +101,23 @@ def run_training(
             Game.size, warmup_sessions=gui_after_runs, auto_pause=auto_pause,
             show_skip_button=not training_mode, warmup_text=warmup_text,
         )
+    max_length = 0
+    max_turns = 0
     try:
         for j in range(meta_iterations):
             gui.begin_session(j)
-            run_session(
+            session_length, session_turns = run_session(
                 j, qtable, gui, training_mode, naivete,
                 show_field, show_vision, show_state, show_action,
-                meta_iterations,
+                show_session_log, meta_iterations,
             )
+            max_length = max(max_length, session_length)
+            max_turns = max(max_turns, session_turns)
             if (gui.closed):
                 break
     finally:
         gui.close()
+    return max_length, max_turns
 
 
 def parse_args():
@@ -143,6 +151,11 @@ def parse_args():
     parser.add_argument(
         "-a", "--show-action", action="store_true",
         help="print the action taken by the agent on every move",
+    )
+    parser.add_argument(
+        "--no-session-log", action="store_true",
+        help="don't print each session's result line "
+             "(printed by default)",
     )
     parser.add_argument(
         "-n", "--no-gui", action="store_true",
@@ -198,11 +211,12 @@ if (__name__ == "__main__"):
         qtable = Qtable()
     meta_iterations = args.sessions
     gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
-    run_training(
+    max_length, max_turns = run_training(
         qtable, meta_iterations, gui_after_runs,
         training_mode=not args.no_train, naivete=args.naive,
         show_field=args.show_field, show_vision=args.show_vision,
         show_state=args.show_state, show_action=args.show_action,
+        show_session_log=not args.no_session_log,
         no_gui=args.no_gui, auto_pause=args.auto_pause,
     )
     if (not args.no_train):
@@ -212,3 +226,5 @@ if (__name__ == "__main__"):
             qtable_filename = ".qtable_finished_at." + str(int(time.time()))
         with open(qtable_filename, "wb") as qtable_file:
             pickle.dump(qtable, qtable_file)
+    print(f"max length achieved: {max_length}")
+    print(f"max turns taken: {max_turns}")
