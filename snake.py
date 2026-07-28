@@ -212,4 +212,3 @@ if (__name__ == "__main__"):
             qtable_filename = ".qtable_finished_at." + str(int(time.time()))
         with open(qtable_filename, "wb") as qtable_file:
             pickle.dump(qtable, qtable_file)
-    print(qtable)
