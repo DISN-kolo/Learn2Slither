@@ -41,7 +41,13 @@ class Gui:
     minimal tkinter board viewer for a running game. controls fps as well
     """
 
-    def __init__(self, size, warmup_sessions=0, auto_pause=False):
+    def __init__(
+            self,
+            size,
+            warmup_sessions=0,
+            auto_pause=False,
+            show_skip_button=False,
+            warmup_text="training..."):
         self.root = tk.Tk()
         self.root.title("Snake Game")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -49,9 +55,11 @@ class Gui:
         self.closed = False
         self.paused = False
         self.step_requested = False
+        self.skip_requested = False
         self.delay_ms = tk.IntVar(value=1)
         self.warmup_sessions = warmup_sessions
         self.auto_pause = auto_pause
+        self.warmup_text = warmup_text
         self.session = 0
         self.warmup_text_id = None
 
@@ -65,7 +73,7 @@ class Gui:
             [None for _ in range(size)] for _ in range(size)
         ]
         self._build_grid(size)
-        self._build_controls()
+        self._build_controls(show_skip_button)
         if (self.warmup_sessions > 0):
             self._set_warmup_text()
         self._pump()
@@ -80,7 +88,7 @@ class Gui:
                 )
                 self.cell_ids[y][x] = cell_id
 
-    def _build_controls(self):
+    def _build_controls(self, show_skip_button):
         controls = tk.Frame(self.root)
         controls.pack(fill="x")
 
@@ -93,6 +101,12 @@ class Gui:
             controls, text="Step", command=self._request_step
         )
         self.step_button.pack(side="left", padx=4, pady=4)
+
+        if (show_skip_button):
+            self.skip_button = tk.Button(
+                controls, text="Next Run", command=self._request_skip
+            )
+            self.skip_button.pack(side="left", padx=4, pady=4)
 
         tk.Label(controls, text="Delay (ms)").pack(side="left", padx=(12, 4))
         self.speed_scale = tk.Scale(
@@ -107,7 +121,7 @@ class Gui:
         cx = self.board_px / 2
         cy = self.board_px / 2
         self.warmup_text_id = self.canvas.create_text(
-            cx, cy, text="training...", font=("Helvetica", 18, "bold"),
+            cx, cy, text=self.warmup_text, font=("Helvetica", 18, "bold"),
             fill="black"
         )
 
@@ -134,6 +148,9 @@ class Gui:
     def _request_step(self):
         self.step_requested = True
 
+    def _request_skip(self):
+        self.skip_requested = True
+
     def _pump(self):
         self.root.update_idletasks()
         self.root.update()
@@ -150,8 +167,8 @@ class Gui:
         """
         redraw the board, block the caller.
         unblock if auto-playing, or unblock on pressing 'step'.
-        returns False once the window has been
-        closed, so the caller knows to stop its loop.
+        returns False once the window has been closed or a run-skip
+        has been requested, so the caller knows to stop its loop.
         """
         if (self.session < self.warmup_sessions):
             return not self.closed
@@ -165,6 +182,7 @@ class Gui:
                 self.paused
                 and not self.step_requested
                 and not self.closed
+                and not self.skip_requested
             ):
                 self._pump()
                 time.sleep(0.03)
@@ -172,10 +190,17 @@ class Gui:
         else:
             elapsed = 0.0
             target = self.delay_ms.get() / 1000.0
-            while (elapsed < target and not self.closed):
+            while (
+                elapsed < target
+                and not self.closed
+                and not self.skip_requested
+            ):
                 time.sleep(0.01)
                 elapsed += 0.01
                 self._pump()
+        if (self.skip_requested):
+            self.skip_requested = False
+            return False
         return not self.closed
 
     def show_result(self, game, won, frames=3):

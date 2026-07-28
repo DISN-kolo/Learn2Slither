@@ -90,8 +90,13 @@ def run_training(
     if (no_gui):
         gui = NullGui()
     else:
+        if (training_mode):
+            warmup_text = "training..."
+        else:
+            warmup_text = "skipping..."
         gui = Gui(
-            Game.size, warmup_sessions=gui_after_runs, auto_pause=auto_pause
+            Game.size, warmup_sessions=gui_after_runs, auto_pause=auto_pause,
+            show_skip_button=not training_mode, warmup_text=warmup_text,
         )
     try:
         for j in range(meta_iterations):
