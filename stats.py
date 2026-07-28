@@ -16,7 +16,7 @@ SURFACE_COLOR = "#fcfcfb"
 
 def save_stats(path, rows):
     with open(path, "w", newline="") as stats_file:
-        writer = csv.writer(stats_file)
+        writer = csv.writer(stats_file, lineterminator="\n")
         writer.writerow(["attempt", "turns", "length"])
         writer.writerows(rows)
 
