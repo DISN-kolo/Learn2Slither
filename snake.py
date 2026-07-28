@@ -134,6 +134,16 @@ def parse_args():
         help="run headless, without opening the tkinter game window "
              "(the gui is shown by default)",
     )
+    parser.add_argument(
+        "--naive", action="store_true",
+        help="use naive (raw grid slice) observations instead of the "
+             "nearest-object-distance ones (off by default)",
+    )
+    parser.add_argument(
+        "--no-train", action="store_true",
+        help="don't update the qtable while playing, just play with a "
+             "frozen qtable (training is on by default)",
+    )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0 and 100")
@@ -148,7 +158,7 @@ if (__name__ == "__main__"):
     gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
     run_training(
         qtable, meta_iterations, gui_after_runs,
-        training_mode=True, naivete=False,
+        training_mode=not args.no_train, naivete=args.naive,
         show_field=args.show_field, show_vision=args.show_vision,
         show_state=args.show_state, show_action=args.show_action,
         no_gui=args.no_gui,
