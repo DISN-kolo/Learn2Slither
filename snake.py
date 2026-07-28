@@ -21,7 +21,8 @@ def run_session(
         show_field,
         show_vision,
         show_state,
-        show_action):
+        show_action,
+        meta_iterations):
     game = Game()
     observer = Observer()
     agent = Agent()
@@ -31,6 +32,10 @@ def run_session(
     # random-over-q preference coeff
     eps = 1.0
     eps_reductor = 0.001
+    #  default was for 100k, now with scaling enabled - make sure eps
+    # reduction scales as well
+    eps_decay_reference_sessions = 100000
+    session_progress = j / meta_iterations * eps_decay_reference_sessions
     # learning coeff
     alpha = 0.9
     # discount factor
@@ -64,7 +69,7 @@ def run_session(
             gui.show_result(game, act_result == Movres.WON)
             break
         i += 1
-        eps *= math.pow(1 - eps_reductor, (i + j/10))
+        eps *= math.pow(1 - eps_reductor, (i + session_progress/10))
     print(f"session {j:10d} done after {i:7d} steps "
           f"with len {len(game.snake):10d}")
 
@@ -90,6 +95,7 @@ def run_training(
             run_session(
                 j, qtable, gui, training_mode, naivete,
                 show_field, show_vision, show_state, show_action,
+                meta_iterations,
             )
             if (gui.closed):
                 break
@@ -144,6 +150,12 @@ def parse_args():
         help="don't update the qtable while playing, just play with a "
              "frozen qtable (training is on by default)",
     )
+    parser.add_argument(
+        "--load-model", metavar="PATH", default=None,
+        help="load a previously saved qtable from PATH instead of "
+             "starting from an empty one (assumes it was trained "
+             "with --naive off)",
+    )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0 and 100")
@@ -153,7 +165,11 @@ def parse_args():
 if (__name__ == "__main__"):
     args = parse_args()
     print("hello snake")
-    qtable = Qtable()
+    if (args.load_model):
+        with open(args.load_model, "rb") as qtable_file:
+            qtable = pickle.load(qtable_file)
+    else:
+        qtable = Qtable()
     meta_iterations = args.sessions
     gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
     run_training(
