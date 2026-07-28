@@ -1,4 +1,5 @@
 #!venv/bin/python
+import argparse
 import math
 import pickle
 import time
@@ -64,11 +65,33 @@ def run_training(qtable, meta_iterations, gui_after_runs,
         gui.close()
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Train a snake-playing agent with Q-learning."
+    )
+    parser.add_argument(
+        "-s", "--sessions", type=int, default=100000,
+        help="number of training sessions to run (default: 100000)",
+    )
+    parser.add_argument(
+        "-p", "--warmup-percent", type=float, default=90.0,
+        help=(
+            "percent of training sessions to run before the game "
+            "starts being drawn (default: 90.0)"
+        ),
+    )
+    args = parser.parse_args()
+    if (args.warmup_percent < 0 or args.warmup_percent > 100):
+        parser.error("--warmup-percent must be between 0 and 100")
+    return args
+
+
 if (__name__ == "__main__"):
+    args = parse_args()
     print("hello snake")
     qtable = Qtable()
-    meta_iterations = 100000
-    gui_after_runs = int(9*meta_iterations/10)
+    meta_iterations = args.sessions
+    gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
     run_training(
         qtable, meta_iterations, gui_after_runs,
         training_mode=True, naivete=False,
