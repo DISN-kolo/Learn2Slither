@@ -1,6 +1,7 @@
 #!venv/bin/python
 import argparse
 import math
+import os
 import pickle
 import time
 import numpy as np
@@ -156,9 +157,18 @@ def parse_args():
              "starting from an empty one (assumes it was trained "
              "with --naive off)",
     )
+    parser.add_argument(
+        "--save-model", metavar="PATH", default=None,
+        help="save the trained qtable to PATH instead of the default "
+             ".qtable_finished_at.<timestamp> filename",
+    )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0 and 100")
+    if (args.load_model and args.save_model
+            and os.path.abspath(args.load_model)
+            == os.path.abspath(args.save_model)):
+        parser.error("--save-model must not be the same file as --load-model")
     return args
 
 
@@ -179,7 +189,10 @@ if (__name__ == "__main__"):
         show_state=args.show_state, show_action=args.show_action,
         no_gui=args.no_gui,
     )
-    qtable_filename = ".qtable_finished_at." + str(int(time.time()))
+    if (args.save_model):
+        qtable_filename = args.save_model
+    else:
+        qtable_filename = ".qtable_finished_at." + str(int(time.time()))
     with open(qtable_filename, "wb") as qtable_file:
         pickle.dump(qtable, qtable_file)
     print(qtable)
