@@ -41,7 +41,7 @@ class Gui:
     minimal tkinter board viewer for a running game. controls fps as well
     """
 
-    def __init__(self, size, warmup_sessions=0):
+    def __init__(self, size, warmup_sessions=0, auto_pause=False):
         self.root = tk.Tk()
         self.root.title("Snake Game")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -51,6 +51,7 @@ class Gui:
         self.step_requested = False
         self.delay_ms = tk.IntVar(value=1)
         self.warmup_sessions = warmup_sessions
+        self.auto_pause = auto_pause
         self.session = 0
         self.warmup_text_id = None
 
@@ -119,6 +120,8 @@ class Gui:
                 and self.warmup_text_id is not None):
             self.canvas.delete(self.warmup_text_id)
             self.warmup_text_id = None
+            if (self.auto_pause):
+                self._toggle_pause()
             self._pump()
 
     def _on_close(self):

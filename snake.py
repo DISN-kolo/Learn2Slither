@@ -85,11 +85,14 @@ def run_training(
         show_vision,
         show_state,
         show_action,
-        no_gui):
+        no_gui,
+        auto_pause):
     if (no_gui):
         gui = NullGui()
     else:
-        gui = Gui(Game.size, warmup_sessions=gui_after_runs)
+        gui = Gui(
+            Game.size, warmup_sessions=gui_after_runs, auto_pause=auto_pause
+        )
     try:
         for j in range(meta_iterations):
             gui.begin_session(j)
@@ -142,6 +145,12 @@ def parse_args():
              "(the gui is shown by default)",
     )
     parser.add_argument(
+        "--auto-pause", action="store_true",
+        help="pause the gui as soon as it starts rendering after the "
+             "warmup sessions, instead of playing right away (off by "
+             "default)",
+    )
+    parser.add_argument(
         "--naive", action="store_true",
         help="use naive (raw grid slice) observations instead of the "
              "nearest-object-distance ones (off by default)",
@@ -169,6 +178,8 @@ def parse_args():
             and os.path.abspath(args.load_model)
             == os.path.abspath(args.save_model)):
         parser.error("--save-model must not be the same file as --load-model")
+    if (args.no_train and args.save_model):
+        parser.error("--save-model cannot be used with --no-train")
     return args
 
 
@@ -187,12 +198,13 @@ if (__name__ == "__main__"):
         training_mode=not args.no_train, naivete=args.naive,
         show_field=args.show_field, show_vision=args.show_vision,
         show_state=args.show_state, show_action=args.show_action,
-        no_gui=args.no_gui,
+        no_gui=args.no_gui, auto_pause=args.auto_pause,
     )
-    if (args.save_model):
-        qtable_filename = args.save_model
-    else:
-        qtable_filename = ".qtable_finished_at." + str(int(time.time()))
-    with open(qtable_filename, "wb") as qtable_file:
-        pickle.dump(qtable, qtable_file)
+    if (not args.no_train):
+        if (args.save_model):
+            qtable_filename = args.save_model
+        else:
+            qtable_filename = ".qtable_finished_at." + str(int(time.time()))
+        with open(qtable_filename, "wb") as qtable_file:
+            pickle.dump(qtable, qtable_file)
     print(qtable)
