@@ -11,6 +11,8 @@ from observer import Observer
 from qtable import Qtable
 from agent import Agent
 from utils.mov_res import Movres
+from utils.naivety import Naivety
+from utils.distance_buckets import DistanceBucket
 
 
 def run_session(
@@ -18,7 +20,6 @@ def run_session(
         qtable,
         gui,
         training_mode,
-        naivete,
         dimension,
         iterations,
         show_field,
@@ -31,7 +32,7 @@ def run_session(
     game = Game(dimension)
     observer = Observer()
     agent = Agent()
-    state = observer.observe(game, naivete)
+    state = observer.observe(game, qtable.naivety)
     qslice = qtable.get_slice(state)
     old_qslice = qslice
     # random-over-q preference coeff
@@ -62,7 +63,7 @@ def run_session(
             print(action.name)
         act_result = game.run_action(action)
         reward = observer.choose_reward(act_result)
-        state = observer.observe(game, naivete)
+        state = observer.observe(game, qtable.naivety)
         if (training_mode):
             qslice = qtable.get_slice(state)
             old_qslice[action.value] = (
@@ -86,7 +87,6 @@ def run_training(
         meta_iterations,
         gui_after_runs,
         training_mode,
-        naivete,
         dimension,
         iterations,
         show_field,
@@ -115,7 +115,7 @@ def run_training(
         for j in range(meta_iterations):
             gui.begin_session(j)
             session_length, session_turns = run_session(
-                j, qtable, gui, training_mode, naivete, dimension,
+                j, qtable, gui, training_mode, dimension,
                 iterations, show_field, show_human_field, show_vision,
                 show_state, show_action, show_session_log, meta_iterations,
             )
@@ -152,7 +152,7 @@ def parse_args():
     parser.add_argument(
         "-i", "--iterations", type=int, default=1000,
         help="maximum number of steps allowed in a single training "
-             "session before it's cut short (default: 1000)",
+             "session (default: 1000)",
     )
     parser.add_argument(
         "-f", "--show-field", action="store_true",
@@ -193,34 +193,46 @@ def parse_args():
              "default)",
     )
     parser.add_argument(
-        "-N", "--naive", action="store_true",
-        help="use grid v/h cross as a state instead of the "
-             "nearest-object-distance ones (off by default). kept only "
-             "to show how ineffective it is. don't use",
+        "-N", "--naivety", choices=[level.name for level in Naivety],
+        default=None,
+        help="state representation to use: NAIVE (grid v/h cross - kept "
+             "only to show how ineffective it is, don't use), SMART "
+             "(nearest-object-distance, default), or SMARTER"
+             "like SMART, but bucketed: 0..1, 2..4, 5..8, 9..+inf). "
+             "Illegal together with --load-model, "
+             "since the qtable object has this info written in it.",
     )
     parser.add_argument(
         "-T", "--no-train", action="store_true",
-        help="don't update the qtable while playing, just play with a "
-             "frozen qtable (training is on by default)",
+        help="don't train/update the qtable while playing, just play "
+             "(training is on by default)",
     )
     parser.add_argument(
         "-l", "--load-model", metavar="PATH", default=None,
         help="load a previously saved qtable from PATH instead of "
-             "starting from an empty one (assumes it was trained "
-             "with --naive off)",
+             "starting from an empty one; its naivety level is read "
+             "from the file itself",
     )
     parser.add_argument(
         "-S", "--save-model", metavar="PATH", default=None,
         help="save the trained qtable to PATH instead of the default "
-             ".qtable_finished_at.<timestamp> filename",
+             ".qtable.<naivety>.finished_at.<timestamp> filename",
     )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
-        parser.error("--warmup-percent must be between 0 and 100")
+        parser.error("--warmup-percent must be between 0.0 and 100.0")
     if (args.dimension < 5):
         parser.error("--dimension must be at least 5")
     if (args.iterations < 1):
         parser.error("--iterations must be at least 1")
+    if (args.load_model and args.naivety is not None):
+        parser.error("--naivety cannot be used together with "
+                     "--load-model; the loaded model already carries "
+                     "its own naivety level")
+    if (args.naivety is None):
+        args.naivety = Naivety.SMART
+    else:
+        args.naivety = Naivety[args.naivety]
     if (args.load_model and args.save_model
             and os.path.abspath(args.load_model)
             == os.path.abspath(args.save_model)):
@@ -240,12 +252,12 @@ if (__name__ == "__main__"):
         with open(args.load_model, "rb") as qtable_file:
             qtable = pickle.load(qtable_file)
     else:
-        qtable = Qtable()
+        qtable = Qtable(args.naivety)
     meta_iterations = args.sessions
     gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
     max_length, max_turns = run_training(
         qtable, meta_iterations, gui_after_runs,
-        training_mode=not args.no_train, naivete=args.naive,
+        training_mode=not args.no_train,
         dimension=args.dimension, iterations=args.iterations,
         show_field=args.show_field, show_human_field=args.show_human_field,
         show_vision=args.show_vision,
@@ -257,7 +269,10 @@ if (__name__ == "__main__"):
         if (args.save_model):
             qtable_filename = args.save_model
         else:
-            qtable_filename = ".qtable_finished_at." + str(int(time.time()))
+            qtable_filename = (".qtable."
+                + qtable.naivety.name
+                + ".finished_at." + str(int(time.time()))
+            )
         with open(qtable_filename, "wb") as qtable_file:
             pickle.dump(qtable, qtable_file)
     print(f"max length achieved: {max_length}")

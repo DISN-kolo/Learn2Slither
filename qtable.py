@@ -14,5 +14,6 @@ class Qtable:
     # (asd,qwe) | -0.2   0.5   145    2.1
     # (qwe,qge) |  151   0.0   -12    0.4
     # (asd,a5)  |  0.0   0.9   1.7   -0.6
-    def __init__(self):
+    def __init__(self, naivety):
         self.table = {}
+        self.naivety = naivety
