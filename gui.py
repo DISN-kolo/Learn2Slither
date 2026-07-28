@@ -15,6 +15,27 @@ CELL_COLORS = {
 }
 
 
+class NullGui:
+    """
+    a dud gui to avoid more ifs in snake.py
+    """
+
+    def __init__(self):
+        self.closed = False
+
+    def begin_session(self, j):
+        pass
+
+    def tick(self, game):
+        return not self.closed
+
+    def show_result(self, game, won):
+        return not self.closed
+
+    def close(self):
+        pass
+
+
 class Gui:
     """
     minimal tkinter board viewer for a running game. controls fps as well

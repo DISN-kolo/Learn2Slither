@@ -5,7 +5,7 @@ import pickle
 import time
 import numpy as np
 from game import Game
-from gui import Gui
+from gui import Gui, NullGui
 from observer import Observer
 from qtable import Qtable
 from agent import Agent
@@ -78,8 +78,12 @@ def run_training(
         show_field,
         show_vision,
         show_state,
-        show_action):
-    gui = Gui(Game.size, warmup_sessions=gui_after_runs)
+        show_action,
+        no_gui):
+    if (no_gui):
+        gui = NullGui()
+    else:
+        gui = Gui(Game.size, warmup_sessions=gui_after_runs)
     try:
         for j in range(meta_iterations):
             gui.begin_session(j)
@@ -125,6 +129,11 @@ def parse_args():
         "-a", "--show-action", action="store_true",
         help="print the action taken by the agent on every move",
     )
+    parser.add_argument(
+        "-n", "--no-gui", action="store_true",
+        help="run headless, without opening the tkinter game window "
+             "(the gui is shown by default)",
+    )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0 and 100")
@@ -142,6 +151,7 @@ if (__name__ == "__main__"):
         training_mode=True, naivete=False,
         show_field=args.show_field, show_vision=args.show_vision,
         show_state=args.show_state, show_action=args.show_action,
+        no_gui=args.no_gui,
     )
     qtable_filename = ".qtable_finished_at." + str(int(time.time()))
     with open(qtable_filename, "wb") as qtable_file:
