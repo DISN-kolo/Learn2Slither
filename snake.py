@@ -12,7 +12,7 @@ from qtable import Qtable
 from agent import Agent
 from utils.mov_res import Movres
 from utils.naivety import Naivety
-from utils.distance_buckets import DistanceBucket
+from stats import save_stats, plot_trajectory
 
 
 def run_session(
@@ -96,7 +96,8 @@ def run_training(
         show_action,
         show_session_log,
         no_gui,
-        auto_pause):
+        auto_pause,
+        stats_path):
     if (no_gui):
         gui = NullGui()
     else:
@@ -111,6 +112,7 @@ def run_training(
         )
     max_length = 0
     max_turns = 0
+    stats_rows = []
     try:
         for j in range(meta_iterations):
             gui.begin_session(j)
@@ -121,12 +123,17 @@ def run_training(
             )
             max_length = max(max_length, session_length)
             max_turns = max(max_turns, session_turns)
+            if (stats_path):
+                stats_rows.append((j, session_turns, session_length))
             if (gui.closed):
                 break
     except KeyboardInterrupt:
         print("\ninterrupted, saving progress so far...")
     finally:
         gui.close()
+    if (stats_path and stats_rows):
+        save_stats(stats_path, stats_rows)
+        plot_trajectory(stats_rows)
     return max_length, max_turns
 
 
@@ -218,6 +225,13 @@ def parse_args():
         help="save the trained qtable to PATH instead of the default "
              ".qtable.<naivety>.finished_at.<timestamp> filename",
     )
+    parser.add_argument(
+        "-D", "--save-stats", metavar="PATH", default=None,
+        help="write per-attempt (attempt, turns, length) stats to PATH "
+             "as csv, and show a turns-vs-length training trajectory "
+             "(with 5- and 20-attempt moving averages) in a matplotlib "
+             "window once training ends",
+    )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0.0 and 100.0")
@@ -264,15 +278,16 @@ if (__name__ == "__main__"):
         show_state=args.show_state, show_action=args.show_action,
         show_session_log=not args.no_session_log,
         no_gui=args.no_gui, auto_pause=args.auto_pause,
+        stats_path=args.save_stats
     )
     if (not args.no_train):
         if (args.save_model):
             qtable_filename = args.save_model
         else:
             qtable_filename = (".qtable."
-                + qtable.naivety.name
-                + ".finished_at." + str(int(time.time()))
-            )
+                               + qtable.naivety.name
+                               + ".finished_at." + str(int(time.time()))
+                               )
         with open(qtable_filename, "wb") as qtable_file:
             pickle.dump(qtable, qtable_file)
     print(f"max length achieved: {max_length}")

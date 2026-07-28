@@ -14,6 +14,7 @@ def choose_d_bucket(distance):
     else:
         return DistanceBucket.VERY_FAR
 
+
 class Observer:
     #  NAIVE fills up the return tuple with the vertical slice followed
     # by the horizontal slice. pretty naïve if you ask me
