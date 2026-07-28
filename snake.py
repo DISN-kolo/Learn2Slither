@@ -12,7 +12,16 @@ from agent import Agent
 from utils.mov_res import Movres
 
 
-def run_session(j, qtable, gui, training_mode, naivete):
+def run_session(
+        j,
+        qtable,
+        gui,
+        training_mode,
+        naivete,
+        show_field,
+        show_vision,
+        show_state,
+        show_action):
     game = Game()
     observer = Observer()
     agent = Agent()
@@ -31,7 +40,15 @@ def run_session(j, qtable, gui, training_mode, naivete):
     while (i < iterations):
         if (not gui.tick(game)):
             break
+        if (show_field):
+            game.just_print_all(numeric_empty=True)
+        if (show_vision):
+            game.print_a_vision()
+        if (show_state):
+            print(state)
         action = agent.suggest_action(eps, state, qtable)
+        if (show_action):
+            print(action.name)
         act_result = game.run_action(action)
         reward = observer.choose_reward(act_result)
         state = observer.observe(game, naivete)
@@ -49,16 +66,27 @@ def run_session(j, qtable, gui, training_mode, naivete):
         i += 1
         eps *= math.pow(1 - eps_reductor, (i + j/10))
     print(f"session {j:10d} done after {i:7d} steps "
-        f"with len {len(game.snake):10d}")
+          f"with len {len(game.snake):10d}")
 
 
-def run_training(qtable, meta_iterations, gui_after_runs,
-                  training_mode, naivete):
+def run_training(
+        qtable,
+        meta_iterations,
+        gui_after_runs,
+        training_mode,
+        naivete,
+        show_field,
+        show_vision,
+        show_state,
+        show_action):
     gui = Gui(Game.size, warmup_sessions=gui_after_runs)
     try:
         for j in range(meta_iterations):
             gui.begin_session(j)
-            run_session(j, qtable, gui, training_mode, naivete)
+            run_session(
+                j, qtable, gui, training_mode, naivete,
+                show_field, show_vision, show_state, show_action,
+            )
             if (gui.closed):
                 break
     finally:
@@ -80,6 +108,23 @@ def parse_args():
             "starts being drawn (default: 90.0)"
         ),
     )
+    parser.add_argument(
+        "-f", "--show-field", action="store_true",
+        help="print the entire field on every move "
+             "(W=wall, 0=empty, H=head, S=body, R=red apple, G=green apple)",
+    )
+    parser.add_argument(
+        "-c", "--show-vision", action="store_true",
+        help="print the cross-shaped view the snake sees on every move",
+    )
+    parser.add_argument(
+        "-t", "--show-state", action="store_true",
+        help="print the state tuple passed to the qtable on every move",
+    )
+    parser.add_argument(
+        "-a", "--show-action", action="store_true",
+        help="print the action taken by the agent on every move",
+    )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0 and 100")
@@ -95,6 +140,8 @@ if (__name__ == "__main__"):
     run_training(
         qtable, meta_iterations, gui_after_runs,
         training_mode=True, naivete=False,
+        show_field=args.show_field, show_vision=args.show_vision,
+        show_state=args.show_state, show_action=args.show_action,
     )
     qtable_filename = ".qtable_finished_at." + str(int(time.time()))
     with open(qtable_filename, "wb") as qtable_file:

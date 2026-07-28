@@ -62,13 +62,13 @@ def generate_init_snake_coords(dim):
     return res
 
 
-def symbolize_cell(cell_enum, is_general=True):
+def symbolize_cell(cell_enum, numeric_empty=False):
     match cell_enum:
         case Cell.EMPTY:
-            if (is_general):
-                return " "
-            else:
+            if (numeric_empty):
                 return "0"
+            else:
+                return " "
         case Cell.WALL:
             return "W"
         case Cell.HEAD:
@@ -192,10 +192,15 @@ class Game:
                 self.move_checker(0, 1)
         return self.result
 
-    def just_print_all(self):
+    def just_print_all(self, numeric_empty=False):
         for y in range(self.size):
             for x in range(self.size):
-                print(symbolize_cell(self.board[x + y*self.size]), end="")
+                print(
+                    symbolize_cell(
+                        self.board[x + y*self.size], numeric_empty
+                    ),
+                    end=""
+                )
             print()
 
     def print_a_vision(self):
@@ -207,7 +212,7 @@ class Game:
                 else:
                     print(
                         symbolize_cell(
-                            self.board[x + y*self.size], False
+                            self.board[x + y*self.size], True
                         ),
                         end=""
                     )
