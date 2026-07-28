@@ -8,3 +8,4 @@ class Movres(Enum):
     GOOD_APPLE = 2
     DEAD = 3
     WON = 4
+    EXTRA_GOOD_APPLE = 5

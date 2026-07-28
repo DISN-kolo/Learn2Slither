@@ -4,6 +4,7 @@ import tkinter as tk
 from utils.cell_types import Cell
 
 CELL_SIZE = 30
+STATUS_FONT = ("Courier", 14)
 
 CELL_COLORS = {
     Cell.EMPTY: "#f0f0f0",
@@ -26,10 +27,10 @@ class NullGui:
     def begin_session(self, j):
         pass
 
-    def tick(self, game):
+    def tick(self, game, turns):
         return not self.closed
 
-    def show_result(self, game, won):
+    def show_result(self, game, won, turns):
         return not self.closed
 
     def close(self):
@@ -43,11 +44,18 @@ class Gui:
 
     def __init__(
             self,
-            size,
+            dimension,
+            max_turns,
+            total_sessions,
             warmup_sessions=0,
             auto_pause=False,
             show_skip_button=False,
             warmup_text="training..."):
+        size = dimension + 2
+        self.length_width = len(str(dimension * dimension))
+        self.turns_width = len(str(max_turns))
+        self.session_width = len(str(total_sessions))
+
         self.root = tk.Tk()
         self.root.title("Snake Game")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -62,6 +70,28 @@ class Gui:
         self.warmup_text = warmup_text
         self.session = 0
         self.warmup_text_id = None
+
+        self.status_frame = tk.Frame(self.root)
+        self.status_frame.pack(fill="x", padx=4, pady=(4, 0))
+        self.status_frame.columnconfigure(1, weight=1)
+        self.session_var = tk.StringVar()
+        self.length_var = tk.StringVar()
+        self.turns_var = tk.StringVar()
+        status_rows = (
+            ("Session:", self.session_var),
+            ("Length:", self.length_var),
+            ("Turns:", self.turns_var),
+        )
+        for row, (label_text, value_var) in enumerate(status_rows):
+            tk.Label(
+                self.status_frame, text=label_text, font=STATUS_FONT,
+                anchor="w"
+            ).grid(row=row, column=0, sticky="w")
+            tk.Label(
+                self.status_frame, textvariable=value_var, font=STATUS_FONT,
+                anchor="e"
+            ).grid(row=row, column=1, sticky="e")
+        self._update_status(0, 0)
 
         self.board_px = size * CELL_SIZE
         self.canvas = tk.Canvas(
@@ -155,15 +185,21 @@ class Gui:
         self.root.update_idletasks()
         self.root.update()
 
-    def render(self, game):
+    def _update_status(self, length, turns):
+        self.session_var.set(f"{self.session:>{self.session_width}d}")
+        self.length_var.set(f"{length:>{self.length_width}d}")
+        self.turns_var.set(f"{turns:>{self.turns_width}d}")
+
+    def render(self, game, turns):
         for y in range(game.size):
             for x in range(game.size):
                 cell = game.board[x + y * game.size]
                 self.canvas.itemconfig(
                     self.cell_ids[y][x], fill=CELL_COLORS[cell]
                 )
+        self._update_status(len(game.snake), turns)
 
-    def tick(self, game):
+    def tick(self, game, turns):
         """
         redraw the board, block the caller.
         unblock if auto-playing, or unblock on pressing 'step'.
@@ -172,7 +208,7 @@ class Gui:
         """
         if (self.session < self.warmup_sessions):
             return not self.closed
-        self.render(game)
+        self.render(game, turns)
         self._pump()
         if (self.closed):
             return False
@@ -203,7 +239,7 @@ class Gui:
             return False
         return not self.closed
 
-    def show_result(self, game, won, frames=3):
+    def show_result(self, game, won, turns, frames=3):
         """
         overlay a WIN/LOSS banner on the board and hold it for the given
         number of paced frames, then clear it. returns False once the window
@@ -227,7 +263,7 @@ class Gui:
         self.canvas.tag_lower(box_id, text_id)
         still_open = True
         for _ in range(frames):
-            still_open = self.tick(game)
+            still_open = self.tick(game, turns)
             if (not still_open):
                 break
         self.canvas.delete(box_id)

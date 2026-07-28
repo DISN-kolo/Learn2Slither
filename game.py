@@ -84,8 +84,6 @@ def symbolize_cell(cell_enum, numeric_empty=False):
 
 class Game:
     """Describes the game field. Can act on it, can return general info"""
-    dimension = 10
-    size = dimension + 2
 
     def gen_apples(self, count, kind):
         for i in range(count):
@@ -101,7 +99,9 @@ class Game:
                                     "board too crowded?")
             self.board[x_pick + y_pick*self.size] = kind
 
-    def __init__(self):
+    def __init__(self, dimension=10):
+        self.dimension = dimension
+        self.size = dimension + 2
         #   x - >
         # y  0  1  2  3  4  5  6  7  8  9 10 11
         # | 12 13 14 15 16 17 18 19 20 21 22 23
@@ -168,6 +168,8 @@ class Game:
                 self.gen_apples(1, Cell.GREEN_APPLE)
                 if (len(self.snake) == 10):
                     self.result = Movres.WON
+                elif (len(self.snake) > 10):
+                    self.result = Movres.EXTRA_GOOD_APPLE
                 else:
                     self.result = Movres.GOOD_APPLE
             case Cell.RED_APPLE:

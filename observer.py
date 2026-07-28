@@ -57,3 +57,5 @@ class Observer:
                 return -5
             case Movres.WON:
                 return 15
+            case Movres.EXTRA_GOOD_APPLE:
+                return 20

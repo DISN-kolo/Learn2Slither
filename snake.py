@@ -19,6 +19,8 @@ def run_session(
         gui,
         training_mode,
         naivete,
+        dimension,
+        iterations,
         show_field,
         show_human_field,
         show_vision,
@@ -26,7 +28,7 @@ def run_session(
         show_action,
         show_session_log,
         meta_iterations):
-    game = Game()
+    game = Game(dimension)
     observer = Observer()
     agent = Agent()
     state = observer.observe(game, naivete)
@@ -43,10 +45,9 @@ def run_session(
     alpha = 0.9
     # discount factor
     gamma = 0.9
-    iterations = 1000
     i = 0
     while (i < iterations):
-        if (not gui.tick(game)):
+        if (not gui.tick(game, i)):
             break
         if (show_field):
             game.just_print_all(numeric_empty=True)
@@ -69,8 +70,8 @@ def run_session(
                 + alpha*(reward + gamma * np.max(qslice))
             )
             old_qslice = qslice
-        if (act_result == Movres.WON or act_result == Movres.DEAD):
-            gui.show_result(game, act_result == Movres.WON)
+        if (act_result == Movres.DEAD):
+            gui.show_result(game, len(game.snake) >= 10, i)
             break
         i += 1
         eps *= math.pow(1 - eps_reductor, (i + session_progress/10))
@@ -86,6 +87,8 @@ def run_training(
         gui_after_runs,
         training_mode,
         naivete,
+        dimension,
+        iterations,
         show_field,
         show_human_field,
         show_vision,
@@ -102,7 +105,8 @@ def run_training(
         else:
             warmup_text = "skipping..."
         gui = Gui(
-            Game.size, warmup_sessions=gui_after_runs, auto_pause=auto_pause,
+            dimension, iterations, meta_iterations,
+            warmup_sessions=gui_after_runs, auto_pause=auto_pause,
             show_skip_button=not training_mode, warmup_text=warmup_text,
         )
     max_length = 0
@@ -111,14 +115,16 @@ def run_training(
         for j in range(meta_iterations):
             gui.begin_session(j)
             session_length, session_turns = run_session(
-                j, qtable, gui, training_mode, naivete,
-                show_field, show_human_field, show_vision, show_state,
-                show_action, show_session_log, meta_iterations,
+                j, qtable, gui, training_mode, naivete, dimension,
+                iterations, show_field, show_human_field, show_vision,
+                show_state, show_action, show_session_log, meta_iterations,
             )
             max_length = max(max_length, session_length)
             max_turns = max(max_turns, session_turns)
             if (gui.closed):
                 break
+    except KeyboardInterrupt:
+        print("\ninterrupted, saving progress so far...")
     finally:
         gui.close()
     return max_length, max_turns
@@ -138,6 +144,15 @@ def parse_args():
             "percent of training sessions to run before the game "
             "starts being drawn (default: 90.0)"
         ),
+    )
+    parser.add_argument(
+        "-d", "--dimension", type=int, default=10,
+        help="board dimension, NxN playable cells (default: 10)",
+    )
+    parser.add_argument(
+        "-i", "--iterations", type=int, default=1000,
+        help="maximum number of steps allowed in a single training "
+             "session before it's cut short (default: 1000)",
     )
     parser.add_argument(
         "-f", "--show-field", action="store_true",
@@ -179,8 +194,9 @@ def parse_args():
     )
     parser.add_argument(
         "-N", "--naive", action="store_true",
-        help="use naive (raw grid slice) observations instead of the "
-             "nearest-object-distance ones (off by default)",
+        help="use grid v/h cross as a state instead of the "
+             "nearest-object-distance ones (off by default). kept only "
+             "to show how ineffective it is. don't use",
     )
     parser.add_argument(
         "-T", "--no-train", action="store_true",
@@ -201,6 +217,10 @@ def parse_args():
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):
         parser.error("--warmup-percent must be between 0 and 100")
+    if (args.dimension < 5):
+        parser.error("--dimension must be at least 5")
+    if (args.iterations < 1):
+        parser.error("--iterations must be at least 1")
     if (args.load_model and args.save_model
             and os.path.abspath(args.load_model)
             == os.path.abspath(args.save_model)):
@@ -226,6 +246,7 @@ if (__name__ == "__main__"):
     max_length, max_turns = run_training(
         qtable, meta_iterations, gui_after_runs,
         training_mode=not args.no_train, naivete=args.naive,
+        dimension=args.dimension, iterations=args.iterations,
         show_field=args.show_field, show_human_field=args.show_human_field,
         show_vision=args.show_vision,
         show_state=args.show_state, show_action=args.show_action,
