@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Movres(Enum):
     UNKNOWN = -1
     NORMAL = 0

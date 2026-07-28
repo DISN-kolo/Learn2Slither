@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Cell(Enum):
     EMPTY = 0
     WALL = 1
