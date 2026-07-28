@@ -20,6 +20,7 @@ def run_session(
         training_mode,
         naivete,
         show_field,
+        show_human_field,
         show_vision,
         show_state,
         show_action,
@@ -49,6 +50,8 @@ def run_session(
             break
         if (show_field):
             game.just_print_all(numeric_empty=True)
+        if (show_human_field):
+            game.just_print_all(numeric_empty=False)
         if (show_vision):
             game.print_a_vision()
         if (show_state):
@@ -84,6 +87,7 @@ def run_training(
         training_mode,
         naivete,
         show_field,
+        show_human_field,
         show_vision,
         show_state,
         show_action,
@@ -108,8 +112,8 @@ def run_training(
             gui.begin_session(j)
             session_length, session_turns = run_session(
                 j, qtable, gui, training_mode, naivete,
-                show_field, show_vision, show_state, show_action,
-                show_session_log, meta_iterations,
+                show_field, show_human_field, show_vision, show_state,
+                show_action, show_session_log, meta_iterations,
             )
             max_length = max(max_length, session_length)
             max_turns = max(max_turns, session_turns)
@@ -141,6 +145,11 @@ def parse_args():
              "(W=wall, 0=empty, H=head, S=body, R=red apple, G=green apple)",
     )
     parser.add_argument(
+        "-H", "--show-human-field", action="store_true",
+        help="like --show-field, but empty cells are printed as spaces "
+             "instead of 0",
+    )
+    parser.add_argument(
         "-c", "--show-vision", action="store_true",
         help="print the cross-shaped view the snake sees on every move",
     )
@@ -153,7 +162,7 @@ def parse_args():
         help="print the action taken by the agent on every move",
     )
     parser.add_argument(
-        "--no-session-log", action="store_true",
+        "-L", "--no-session-log", action="store_true",
         help="don't print each session's result line "
              "(printed by default)",
     )
@@ -163,29 +172,29 @@ def parse_args():
              "(the gui is shown by default)",
     )
     parser.add_argument(
-        "--auto-pause", action="store_true",
+        "-P", "--auto-pause", action="store_true",
         help="pause the gui as soon as it starts rendering after the "
              "warmup sessions, instead of playing right away (off by "
              "default)",
     )
     parser.add_argument(
-        "--naive", action="store_true",
+        "-N", "--naive", action="store_true",
         help="use naive (raw grid slice) observations instead of the "
              "nearest-object-distance ones (off by default)",
     )
     parser.add_argument(
-        "--no-train", action="store_true",
+        "-T", "--no-train", action="store_true",
         help="don't update the qtable while playing, just play with a "
              "frozen qtable (training is on by default)",
     )
     parser.add_argument(
-        "--load-model", metavar="PATH", default=None,
+        "-l", "--load-model", metavar="PATH", default=None,
         help="load a previously saved qtable from PATH instead of "
              "starting from an empty one (assumes it was trained "
              "with --naive off)",
     )
     parser.add_argument(
-        "--save-model", metavar="PATH", default=None,
+        "-S", "--save-model", metavar="PATH", default=None,
         help="save the trained qtable to PATH instead of the default "
              ".qtable_finished_at.<timestamp> filename",
     )
@@ -198,6 +207,9 @@ def parse_args():
         parser.error("--save-model must not be the same file as --load-model")
     if (args.no_train and args.save_model):
         parser.error("--save-model cannot be used with --no-train")
+    if (args.show_field and args.show_human_field):
+        parser.error("--show-field and --show-human-field are mutually "
+                     "exclusive")
     return args
 
 
@@ -214,7 +226,8 @@ if (__name__ == "__main__"):
     max_length, max_turns = run_training(
         qtable, meta_iterations, gui_after_runs,
         training_mode=not args.no_train, naivete=args.naive,
-        show_field=args.show_field, show_vision=args.show_vision,
+        show_field=args.show_field, show_human_field=args.show_human_field,
+        show_vision=args.show_vision,
         show_state=args.show_state, show_action=args.show_action,
         show_session_log=not args.no_session_log,
         no_gui=args.no_gui, auto_pause=args.auto_pause,
