@@ -128,7 +128,7 @@ def run_training(
             if (gui.closed):
                 break
     except KeyboardInterrupt:
-        print("\ninterrupted, saving progress so far...")
+        print("\ninterrupted.")
     finally:
         gui.close()
     if (stats_path and stats_rows):
