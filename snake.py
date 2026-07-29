@@ -12,7 +12,7 @@ from qtable import Qtable
 from agent import Agent
 from utils.mov_res import Movres
 from utils.naivety import Naivety
-from stats import save_stats, plot_trajectory
+from stats import save_stats
 
 
 def run_session(
