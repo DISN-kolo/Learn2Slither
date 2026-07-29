@@ -133,7 +133,6 @@ def run_training(
         gui.close()
     if (stats_path and stats_rows):
         save_stats(stats_path, stats_rows)
-        plot_trajectory(stats_rows)
     return max_length, max_turns
 
 
@@ -205,7 +204,7 @@ def parse_args():
         help="state representation to use: NAIVE (grid v/h cross - kept "
              "only to show how ineffective it is, don't use), SMART "
              "(nearest-object-distance, default), or SMARTER"
-             "like SMART, but bucketed: 0..1, 2..4, 5..8, 9..+inf). "
+             "like SMART, but bucketed: 0..1, 2..4, 5..7, 8..+inf). "
              "Illegal together with --load-model, "
              "since the qtable object has this info written in it.",
     )
@@ -228,9 +227,7 @@ def parse_args():
     parser.add_argument(
         "-D", "--save-stats", metavar="PATH", default=None,
         help="write per-attempt (attempt, turns, length) stats to PATH "
-             "as csv, and show a turns-vs-length training trajectory "
-             "(with 5- and 20-attempt moving averages) in a matplotlib "
-             "window once training ends",
+             "as csv",
     )
     args = parser.parse_args()
     if (args.warmup_percent < 0 or args.warmup_percent > 100):

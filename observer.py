@@ -9,7 +9,7 @@ def choose_d_bucket(distance):
         return DistanceBucket.NEXT
     if (2 <= distance <= 4):
         return DistanceBucket.CLOSE
-    if (5 <= distance <= 8):
+    if (5 <= distance <= 7):
         return DistanceBucket.FAR
     else:
         return DistanceBucket.VERY_FAR
