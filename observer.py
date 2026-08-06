@@ -1,5 +1,4 @@
 from utils.cell_types import Cell
-from utils.mov_res import Movres
 from utils.naivety import Naivety
 from utils.distance_buckets import DistanceBucket
 
@@ -89,17 +88,5 @@ class Observer:
         res = tuple(arr)
         return res
 
-    def choose_reward(self, act_result):
-        match act_result:
-            case Movres.NORMAL:
-                return -1
-            case Movres.DEAD:
-                return -75
-            case Movres.GOOD_APPLE:
-                return 10
-            case Movres.BAD_APPLE:
-                return -5
-            case Movres.WON:
-                return 15
-            case Movres.EXTRA_GOOD_APPLE:
-                return 20
+    def choose_reward(self, act_result, rewards):
+        return rewards[act_result]

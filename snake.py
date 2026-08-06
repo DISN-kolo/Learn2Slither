@@ -43,7 +43,7 @@ def run_session(
     eps_decay_reference_sessions = 100000
     session_progress = j / meta_iterations * eps_decay_reference_sessions
     # learning coeff
-    alpha = 0.9
+    alpha = qtable.alpha
     # discount factor
     gamma = 0.9
     i = 0
@@ -62,7 +62,7 @@ def run_session(
         if (show_action):
             print(action.name)
         act_result = game.run_action(action)
-        reward = observer.choose_reward(act_result)
+        reward = observer.choose_reward(act_result, qtable.rewards)
         state = observer.observe(game, qtable.naivety)
         if (training_mode):
             qslice = qtable.get_slice(state)
@@ -209,6 +209,49 @@ def parse_args():
              "since the qtable object has this info written in it.",
     )
     parser.add_argument(
+        "-A", "--alpha", type=float, default=None,
+        help="learning rate used for Q-value updates (default: 0.3); "
+             "illegal together with --load-model, since the qtable "
+             "object has this value written in it.",
+    )
+    parser.add_argument(
+        "-m", "--reward-normal", type=float, default=None,
+        help="reward for a normal move that doesn't eat anything "
+             "(default: -1); illegal together with --load-model, "
+             "since the qtable object has this value written in it.",
+    )
+    parser.add_argument(
+        "-k", "--reward-dead", type=float, default=None,
+        help="reward for dying (default: -75); illegal together with "
+             "--load-model, since the qtable object has this value "
+             "written in it.",
+    )
+    parser.add_argument(
+        "-g", "--reward-good-apple", type=float, default=None,
+        help="reward for eating a green apple (default: 10); illegal "
+             "together with --load-model, since the qtable object has "
+             "this value written in it.",
+    )
+    parser.add_argument(
+        "-b", "--reward-bad-apple", type=float, default=None,
+        help="reward for eating a red apple (default: -10); illegal "
+             "together with --load-model, since the qtable object has "
+             "this value written in it.",
+    )
+    parser.add_argument(
+        "-w", "--reward-won", type=float, default=None,
+        help="reward for reaching the winning length of 10 (default: "
+             "20, same as --reward-extra-good-apple for now); illegal "
+             "together with --load-model, since the qtable object has "
+             "this value written in it.",
+    )
+    parser.add_argument(
+        "-e", "--reward-extra-good-apple", type=float, default=None,
+        help="reward for eating a green apple past the winning length "
+             "(default: 20); illegal together with --load-model, "
+             "since the qtable object has this value written in it.",
+    )
+    parser.add_argument(
         "-T", "--no-train", action="store_true",
         help="don't train/update the qtable while playing, just play "
              "(training is on by default)",
@@ -244,6 +287,27 @@ def parse_args():
         args.naivety = Naivety.SMART
     else:
         args.naivety = Naivety[args.naivety]
+    alpha_and_reward_defaults = {
+        "alpha": 0.3,
+        "reward_normal": -1,
+        "reward_dead": -75,
+        "reward_good_apple": 10,
+        "reward_bad_apple": -10,
+        "reward_won": 20,
+        "reward_extra_good_apple": 20,
+    }
+    if (args.load_model):
+        for flag_name in alpha_and_reward_defaults:
+            if (getattr(args, flag_name) is not None):
+                parser.error(
+                    "--alpha and --reward-* flags cannot be used "
+                    "together with --load-model; the loaded model "
+                    "already carries its own values for these"
+                )
+    else:
+        for flag_name, default_value in alpha_and_reward_defaults.items():
+            if (getattr(args, flag_name) is None):
+                setattr(args, flag_name, default_value)
     if (args.load_model and args.save_model
             and os.path.abspath(args.load_model)
             == os.path.abspath(args.save_model)):
@@ -263,7 +327,15 @@ if (__name__ == "__main__"):
         with open(args.load_model, "rb") as qtable_file:
             qtable = pickle.load(qtable_file)
     else:
-        qtable = Qtable(args.naivety)
+        rewards = {
+            Movres.NORMAL: args.reward_normal,
+            Movres.DEAD: args.reward_dead,
+            Movres.GOOD_APPLE: args.reward_good_apple,
+            Movres.BAD_APPLE: args.reward_bad_apple,
+            Movres.WON: args.reward_won,
+            Movres.EXTRA_GOOD_APPLE: args.reward_extra_good_apple,
+        }
+        qtable = Qtable(args.naivety, args.alpha, rewards)
     meta_iterations = args.sessions
     gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
     max_length, max_turns = run_training(
