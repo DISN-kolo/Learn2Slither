@@ -1,4 +1,4 @@
-#!venv/bin/python
+#!.venv/bin/python
 from utils.cell_types import Cell
 from utils.mov_dirs import Movdir
 from utils.mov_res import Movres

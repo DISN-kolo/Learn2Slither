@@ -2,14 +2,12 @@
 42's Learn to Slither project (Q-learning a Snake game)
 
 ### Installing
-0. you should have python3.13 or above (tested on 3.13)
-1. for the first run, do `python -m venv venv`
-2. both then and in every subsequent run, do `source venv/bin/activate`
-3. if this is the first run, also do `pip install -r requirements.txt`
-4. done working? `deactivate`
+This project uses [uv](https://docs.astral.sh/uv/) to manage the Python version and dependencies.
+0. install `uv` if you don't already have it (see the [uv install docs](https://docs.astral.sh/uv/getting-started/installation/))
+1. for the first run, do `uv sync`
 
 ### Running
-The entire program is run thru the `snake.py` file. If you've set up the venv as indicated in [Installing](#installing), then it's simply `./snake.py`.
+The entire program is run thru the `snake.py` file. If you've set up the venv as indicated in [Installing](#installing), then it's simply `./snake.py`, or `uv run snake.py`.
 
 By default, it performs a training run of 100k sessions with the "SMART" model selected, and the gui starts rendering the gameplay at 90% of sessions completed. The default filename of a saved qtable is `.qtable.<Model>.finished_at.<unix time>`.
 
