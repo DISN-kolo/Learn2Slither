@@ -36,7 +36,7 @@ def run_session(
     qslice = qtable.get_slice(state)
     old_qslice = qslice
     # random-over-q preference coeff
-    eps = 1.0
+    eps = 1.0 if (training_mode) else 0.0
     eps_reductor = 0.001
     #  default was for 100k, now with scaling enabled - make sure eps
     # reduction scales as well
