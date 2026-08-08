@@ -112,6 +112,9 @@ def run_training(
         )
     max_length = 0
     max_turns = 0
+    length_sum = 0
+    session_count = 0
+    won_count = 0
     stats_rows = []
     try:
         for j in range(meta_iterations):
@@ -123,6 +126,10 @@ def run_training(
             )
             max_length = max(max_length, session_length)
             max_turns = max(max_turns, session_turns)
+            length_sum += session_length
+            session_count += 1
+            if (session_length >= 10):
+                won_count += 1
             if (stats_path):
                 stats_rows.append((j, session_turns, session_length))
             if (gui.closed):
@@ -133,7 +140,9 @@ def run_training(
         gui.close()
     if (stats_path and stats_rows):
         save_stats(stats_path, stats_rows)
-    return max_length, max_turns
+    avg_length = length_sum / session_count if (session_count) else 0
+    won_percent = (won_count / session_count * 100) if (session_count) else 0
+    return max_length, max_turns, avg_length, won_percent
 
 
 def parse_args():
@@ -338,7 +347,7 @@ if (__name__ == "__main__"):
         qtable = Qtable(args.naivety, args.alpha, rewards)
     meta_iterations = args.sessions
     gui_after_runs = int(meta_iterations * args.warmup_percent / 100)
-    max_length, max_turns = run_training(
+    max_length, max_turns, avg_length, won_percent = run_training(
         qtable, meta_iterations, gui_after_runs,
         training_mode=not args.no_train,
         dimension=args.dimension, iterations=args.iterations,
@@ -361,3 +370,5 @@ if (__name__ == "__main__"):
             pickle.dump(qtable, qtable_file)
     print(f"max length achieved: {max_length}")
     print(f"max turns taken: {max_turns}")
+    print(f"average length achieved: {avg_length:.2f}")
+    print(f"% of sessions with length >= 10: {won_percent:.2f}%")
