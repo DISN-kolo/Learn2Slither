@@ -1,14 +1,22 @@
+import math
 from utils.cell_types import Cell
 from utils.naivety import Naivety
 from utils.distance_buckets import DistanceBucket
 
 
-def choose_d_bucket(distance):
+def choose_d_bucket(distance, dimension):
     if (distance <= 1):
         return DistanceBucket.NEXT
     if (2 <= distance <= 4):
         return DistanceBucket.CLOSE
-    if (5 <= distance <= 7):
+    #  FAR/VERY_FAR = get whatever's after CLOSE and up to +dim and
+    # split it in half.
+    #  really helps with non-10-dimensional boards
+    far_start = 5
+    remaining = dimension - far_start + 1
+    far_width = math.ceil(remaining / 2)
+    far_end = far_start + far_width - 1
+    if (far_start <= distance <= far_end):
         return DistanceBucket.FAR
     else:
         return DistanceBucket.VERY_FAR
@@ -83,7 +91,7 @@ class Observer:
                             break
                         observed_cell = game.board[x + y*game.size]
                     arr.append(observed_cell)
-                    arr.append(choose_d_bucket(distance))
+                    arr.append(choose_d_bucket(distance, game.dimension))
                 pass
         res = tuple(arr)
         return res
