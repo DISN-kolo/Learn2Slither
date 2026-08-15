@@ -4,9 +4,6 @@
 ### Premise
 Snake is a fun game. It's even more fun to leave the gameplay entirely to a soulless cold machine. This repository does exactly that: it runs an algorithm of learning to play based on remembering already-seen-before scenarios and the possible rewards obtained in them per potential action taken. For a sufficiently detailed explanation, see to [this amazing wiki article (it is literally all that's needed to understand what's happening)](https://en.wikipedia.org/wiki/Q-learning#Algorithm).
 
-![An untrained agent](videos/snakegame_bad.webp)
-<p align=center><i>An untrained agent is really bad at playing</i><br><br></p>
-
 Just as a reminder - this is not considered a 'super smart' way of learning. The states here are not multidimensional, and something like
 
 `(apple up 1, wall left 2, wall down 6, body right 1)`
@@ -17,7 +14,21 @@ is considered to be an ENTIRELY different state as compared to
 
 The only way the model can win consistently is by learning from a huge amount of states.
 
-(*[inspect](#model-details) the models to learn about the amount of states they have*)
+![An untrained agent](videos/snakegame_bad.webp)|![An agent trained with high alpha](videos/snakegame_looping_high_alpha.webp)
+:-:|:-:
+*An untrained agent is really bad at playing*|*An agent trained with high alpha often falls into loops*
+
+A successful agent, like the one seen in `models/50k.smarter.low-alpha`, shows great results:
+```
+max length achieved: 56
+max turns taken: 1000
+average length achieved: 25.97
+% of sessions with length >= 10: 92.70%
+```
+
+![An agent trained with low alpha](videos/snakegame_win_low_alpha.webp)
+
+(*[inspect](#model-details) the models to learn about their parameters and the amount of states they have*)
 
 ### Installing
 This project uses [uv](https://docs.astral.sh/uv/) to manage the Python version and dependencies.
