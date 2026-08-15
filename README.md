@@ -4,7 +4,7 @@
 ### Premise
 Snake is a fun game. It's even more fun to leave the gameplay entirely to a soulless cold machine. This repository does exactly that: it runs an algorithm of learning to play based on remembering already-seen-before scenarios and the possible rewards obtained in them per potential action taken. For a sufficiently detailed explanation, see to [this amazing wiki article (it is literally all that's needed to understand what's happening)](https://en.wikipedia.org/wiki/Q-learning#Algorithm).
 
-![An untrained agent](videos/snakegame_bad.webm)
+![An untrained agent](videos/snakegame_bad.webp)
 <p align=center><i>An untrained agent is really bad at playing</i><br><br></p>
 
 Just as a reminder - this is not considered a 'super smart' way of learning. The states here are not multidimensional, and something like
